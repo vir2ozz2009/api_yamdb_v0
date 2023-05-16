@@ -3,9 +3,7 @@ from django.db import models
 
 
 class User(AbstractUser):
-    """
-    Кастомная модель пользователя.
-    """
+    """Кастомная модель пользователя."""
     bio = models.TextField(
         'Биография',
         blank=True,
