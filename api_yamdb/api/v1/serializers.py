@@ -5,7 +5,7 @@ from reviews.models import Review
 
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор для модели Review."""
-    
+
     title = serializers.SlugRelatedField(slug_field='name', read_only=True)
     author = serializers.SlugRelatedField(
         slug_field='username', read_only=True
