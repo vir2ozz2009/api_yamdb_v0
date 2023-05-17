@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from reviews.models import Categories, Genres, Review, Titles, User
 
-from .permissions import AdminPermission
+from .permissions import CustomPermission
 from .serializers import (
     CategoriesSerializer, GenresSerializer, GetTokenSerializer,
     RegistrationSerializer, RetrieveUpdateUserSerializer, ReviewSerializer,
@@ -20,7 +20,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
 
     queryset = Titles.objects.all()
     serializer_class = TitlesSerializers
-    permission_classes = (AdminPermission,)
+    permission_classes = (CustomPermission,)
     filter_backends = (filters.SearchFilter,
                        filters.OrderingFilter)
     pagination_class = None

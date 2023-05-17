@@ -9,6 +9,12 @@ from django.db import models
 
 CHARS_TO_SHOW = 15
 
+role_list = (
+    ('admin', 'Админ'),
+    ('user', 'Пользователь'),
+    ('moderator', 'Модератор')
+)
+
 
 class Categories(models.Model):
     """Модель категорий (типов) произведения."""
@@ -131,11 +137,6 @@ class User(AbstractUser):
         'Биография',
         blank=True,
     )
-    role_list = (
-        ('admin', 'Админ'),
-        ('user', 'Пользователь'),
-        ('moderator', 'Модератор')
-    )
     role = models.CharField(
         'Роль пользователя',
         choices=role_list,
@@ -175,7 +176,7 @@ class Review(models.Model):
     """Модели для отзывов."""
 
     title = models.ForeignKey(
-        Title,
+        Titles,
         on_delete=models.CASCADE,
         related_name='reviews',
     )
