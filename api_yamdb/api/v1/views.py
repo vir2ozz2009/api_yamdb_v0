@@ -18,6 +18,17 @@ class TitlesViewSet(viewsets.ModelViewSet):
     queryset = Titles.objects.all()
     serializer_class = TitlesSerializers
     permission_classes = (AdminChangeOnly,)
+    filter_backends = (filters.SearchFilter,
+                       filters.OrderingFilter)
+    pagination_class = None
+    filterset_fields = {
+        'category': ['category__slug'],
+        'genre': ['genres__slug'],
+        'name': ['name'],
+        'year': ['year'],
+    }
+    ordering_fields = ('name', 'year')
+
 
 
 class GenresViewSet(viewsets.ModelViewSet):
@@ -36,3 +47,5 @@ class CategoriesViewSet(viewsets.ModelViewSet):
     queryset = Categories.objects.all()
     serializer_class = CategoriesSerializer
     permission_classes = (permissions.AllowAny,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
