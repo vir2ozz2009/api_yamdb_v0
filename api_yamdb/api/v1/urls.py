@@ -2,7 +2,7 @@ from rest_framework.routers import DefaultRouter
 
 from django.urls import include, path
 
-from .views import ReviewViewSet
+from .views import RegistrationAPIView, ReviewViewSet
 
 router = DefaultRouter()
 router.register(
@@ -11,4 +11,5 @@ router.register(
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('auth/signup/', RegistrationAPIView.as_view()),
 ]
