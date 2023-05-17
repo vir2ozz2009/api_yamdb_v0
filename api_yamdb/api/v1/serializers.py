@@ -1,9 +1,11 @@
-from rest_framework import serializers
-
 import datetime as dt
 
+from rest_framework import serializers
+
 from django.core.validators import RegexValidator
-from reviews.models import Categories, Genres, Titles, Review, User
+from django.shortcuts import get_object_or_404
+
+from reviews.models import Categories, Genres, Review, Titles, User
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -124,3 +126,49 @@ class RegistrationSerializer(serializers.ModelSerializer):
         '''Создаем нового пользователя с валидированными данными.'''
 
         return User.objects.create_user(**validated_data)
+
+
+class GetTokenSerializer(serializers.Serializer):
+    '''Получение jwt токена.'''
+
+    email = serializers.EmailField(write_only=True),
+    confirmation_code = serializers.CharField(write_only=True),
+    token = serializers.CharField(read_only=True)
+
+    def validate(self, data):
+        '''
+        Проверяем, что передан username и confirmation_code.
+        '''
+        username = self.initial_data.get('username', None)
+        confirmation_code = self.initial_data.get('confirmation_code', None)
+        if username is None:
+            raise serializers.ValidationError(
+                'Требуется username!'
+            )
+        if (confirmation_code is None
+            or confirmation_code != get_object_or_404(
+                User,
+                username=username).confirmation_code):
+            raise serializers.ValidationError(
+                'confirmation_code некорректен!'
+            )
+        user = get_object_or_404(User,
+                                 username=username,
+                                 confirmation_code=confirmation_code)
+        return {'token': user.create_jwt_token}
+
+
+class RetrieveUpdateUserSerializer(serializers.ModelSerializer):
+    '''Изменение собственных данных пользователем.'''
+
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'bio',
+            'role'
+        )
+        read_only_fields = ('role',)
