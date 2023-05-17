@@ -1,5 +1,6 @@
 """Модели для произведений."""
 
+from django.core.validators import RegexValidator
 from django.db import models
 
 CHARS_TO_SHOW = 15
@@ -8,8 +9,19 @@ CHARS_TO_SHOW = 15
 class Categories(models.Model):
     """Модель категорий (типов) произведения."""
 
-    name = models.CharField(max_length=256)
-    slug = models.SlugField(unique=True, max_length=50)
+    name = models.CharField(max_length=256, blank=False, null=False)
+    slug = models.SlugField(
+        unique=True,
+        max_length=50,
+        blank=False,
+        null=False
+    )
+    validators = [
+        RegexValidator(
+            regex=r'^[-a-zA-Z0-9_]+$',
+            message='Используйте цифры, латинские буквы, дефис, подчеркивание.'
+        )
+    ]
 
     def __str__(self):
         return self.name[:CHARS_TO_SHOW]
@@ -18,8 +30,19 @@ class Categories(models.Model):
 class Genres(models.Model):
     """Модель жанров произведения."""
 
-    name = models.CharField(max_length=256)
-    slug = models.SlugField(unique=True, max_length=50)
+    name = models.CharField(max_length=256, blank=False, null=False)
+    slug = models.SlugField(
+        unique=True,
+        max_length=50,
+        blank=False,
+        null=False
+    )
+    validators = [
+        RegexValidator(
+            regex=r'^[-a-zA-Z0-9_]+$',
+            message='Используйте цифры, латинские буквы, дефис, подчеркивание.'
+        )
+    ]
 
     def __str__(self):
         return self.name[:CHARS_TO_SHOW]
