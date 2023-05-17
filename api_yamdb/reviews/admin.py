@@ -1,6 +1,13 @@
 from django.contrib import admin
 
-from .models import Review, User
+from .models import Genres, Categories, Titles, Review, User
+
+
+class TitlesAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'name', 'year', 'description', 'category')
+    search_fields = ('name',)
+    list_filter = ('id',)
+    empty_value_display = '-пусто-'
 
 
 class ReviewAdmin(admin.ModelAdmin):
@@ -9,6 +16,8 @@ class ReviewAdmin(admin.ModelAdmin):
     list_filter = ('pub_date',)
     empty_value_display = '-пусто-'
 
-
+admin.site.register(Titles, TitlesAdmin)
+admin.site.register(Genres)
+admin.site.register(Categories)
 admin.site.register(Review, ReviewAdmin)
 admin.site.register(User)
