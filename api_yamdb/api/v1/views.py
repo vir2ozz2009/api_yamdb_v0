@@ -1,18 +1,19 @@
 """Вьюхи к API."""
 
-from rest_framework import filters, permissions, viewsets, status
+from rest_framework import filters, permissions, status, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from django.shortcuts import get_object_or_404
 
-from reviews.models import Categories, Titles, Genres, Review, User
+from reviews.models import Categories, Genres, Review, Titles, User
 
-from .serializers import (
-    GenresSerializer, CategoriesSerializer, TitlesSerializers, RegistrationSerializer, ReviewSerializer
-)
 from .permissions import AdminChangeOnly
+from .serializers import (
+    CategoriesSerializer, CommentSerializer, GenresSerializer,
+    RegistrationSerializer, ReviewSerializer, TitlesSerializers,
+)
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
@@ -21,8 +22,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
     queryset = Titles.objects.all()
     serializer_class = TitlesSerializers
     permission_classes = (AdminChangeOnly,)
-    filter_backends = (filters.SearchFilter,
-                       filters.OrderingFilter)
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
     pagination_class = None
     filterset_fields = {
         'category': ['category__slug'],
@@ -31,7 +31,6 @@ class TitlesViewSet(viewsets.ModelViewSet):
         'year': ['year'],
     }
     ordering_fields = ('name', 'year')
-
 
 
 class GenresViewSet(viewsets.ModelViewSet):
@@ -59,11 +58,29 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     serializer_class = ReviewSerializer
     pagination_class = LimitOffsetPagination
-    queryset = Review.objects.select_related('title')
+
+    def get_queryset(self):
+        title = get_object_or_404(Titles, id=self.kwargs.get('title_id'))
+        return title.reviews.all()
 
     def perform_create(self, serializer):
         serializer.save(
-            author=self.request.user, title_id=self.request.data.get('title')
+            author=self.request.user, title_id=self.kwargs.get('title_id')
+        )
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    """Список комментарией."""
+
+    serializer_class = CommentSerializer
+
+    def get_queryset(self):
+        review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
+        return review.comments.select_related('author')
+
+    def perform_create(self, serializer):
+        serializer.save(
+            author=self.request.user, review_id=self.kwargs.get('review_id')
         )
 
 
@@ -77,28 +94,34 @@ class RegistrationAPIView(APIView):
         if serializer.is_valid():
             username = serializer.validated_data.get('username')
             email = serializer.validated_data.get('email')
-            if (User.objects.filter(username=username).exists()
-               and User.objects.filter(email=email).exists()):
+            if (
+                User.objects.filter(username=username).exists()
+                and User.objects.filter(email=email).exists()
+            ):
                 return Response(
-                    {'error': 'Пользователь с таким username'
-                     'или email уже существует'},
-                    status=status.HTTP_200_OK
+                    {
+                        'error': 'Пользователь с таким username'
+                        'или email уже существует'
+                    },
+                    status=status.HTTP_200_OK,
                 )
             elif User.objects.filter(email=email).exists():
                 return Response(
                     {'error': 'Это email уже используется'},
-                    status=status.HTTP_400_BAD_REQUEST
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
-            elif (User.objects.filter(username=username).exists()
-                  and not User.objects.filter(email=email).exists()):
+            elif (
+                User.objects.filter(username=username).exists()
+                and not User.objects.filter(email=email).exists()
+            ):
                 return Response(
                     {'error': 'Неправильный email'},
-                    status=status.HTTP_400_BAD_REQUEST
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
             else:
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST)
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            )
