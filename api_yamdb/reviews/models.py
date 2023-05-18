@@ -115,10 +115,10 @@ class CustomUserManager(UserManager):
         return user
 
     def create_superuser(self, username, email, password, **extra_fields):
-        '''
+        """
         Создает и возвращает суперпользователя с email, паролем, именем
         и присваивае суперпользователю роль admin.
-        '''
+        """
 
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
@@ -166,7 +166,7 @@ class User(AbstractUser):
     objects = CustomUserManager()
 
     def create_jwt_token(self):
-        '''Создает и возвращает jwt токен для пользователя'''
+        """Создает и возвращает jwt токен для пользователя"""
 
         refresh = RefreshToken.for_user(self)
         return str(refresh.access_token)

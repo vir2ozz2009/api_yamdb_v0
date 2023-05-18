@@ -4,14 +4,14 @@ from rest_framework.routers import DefaultRouter
 
 from django.urls import include, path
 
-from .routers import CustomRRetrieveUpdateUserRouter
+from .routers import CustomRetrieveUpdateUserRouter
 from .views import (
     CategoriesViewSet, GenresViewSet, GetTokenAPIView, RegistrationAPIView,
     RetrieveUpdateUserViewSet, ReviewViewSet, TitlesViewSet,
 )
 
 router = DefaultRouter()
-router_me = CustomRRetrieveUpdateUserRouter()
+router_me = CustomRetrieveUpdateUserRouter()
 
 router.register('titles', TitlesViewSet)
 router.register('categories', CategoriesViewSet)

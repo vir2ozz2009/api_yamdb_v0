@@ -127,7 +127,7 @@ class RetrieveUpdateViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
 
 
 class RetrieveUpdateUserViewSet(RetrieveUpdateViewSet):
-    '''Изменение собственных данных пользователем.'''
+    """Изменение собственных данных пользователем."""
 
     queryset = User.objects.all()
     serializer_class = RetrieveUpdateUserSerializer

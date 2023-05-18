@@ -1,8 +1,8 @@
 from rest_framework.routers import Route, SimpleRouter
 
 
-class CustomRRetrieveUpdateUserRouter(SimpleRouter):
-    '''Кастомный роутер для отображения retrieve объекта не по pk, а по me.'''
+class CustomRetrieveUpdateUserRouter(SimpleRouter):
+    """Кастомный роутер для отображения retrieve объекта не по pk, а по me."""
 
     routes = [
         Route(

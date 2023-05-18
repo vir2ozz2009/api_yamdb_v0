@@ -19,7 +19,7 @@ from reviews.models import Review, User
 
 
 class OnlyAdminPermission(BasePermission):
-    '''Разрешение для admin.'''
+    """Разрешение для admin."""
 
     def has_permission(self, request, view):
         return ((request.user.is_authenticated
@@ -28,7 +28,7 @@ class OnlyAdminPermission(BasePermission):
 
 
 class CustomPermission(BasePermission):
-    '''Разрешение на всё views, кроме "только для admin"'''
+    """Разрешение на всё views, кроме 'только для admin'"""
 
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
@@ -46,3 +46,4 @@ class CustomPermission(BasePermission):
             return True
         elif request.user.role == 'admin' or request.user.is_superuser:
             return True
+        return False

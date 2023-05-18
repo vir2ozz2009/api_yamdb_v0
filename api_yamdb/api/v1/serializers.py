@@ -91,7 +91,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
-    '''Регистрация нового пользователя.'''
+    """Регистрация нового пользователя."""
 
     password = serializers.CharField(required=False, write_only=True)
     username = serializers.CharField(
@@ -116,29 +116,28 @@ class RegistrationSerializer(serializers.ModelSerializer):
         }
 
     def validate_username(self, value):
-        '''Проверка что имя пользователя не равно me.'''
+        """Проверка что имя пользователя не равно me."""
 
         if value == 'me':
             raise serializers.ValidationError('Имя "me" недопускается!')
         return value
 
     def create(self, validated_data):
-        '''Создаем нового пользователя с валидированными данными.'''
+        """Создаем нового пользователя с валидированными данными."""
 
         return User.objects.create_user(**validated_data)
 
 
 class GetTokenSerializer(serializers.Serializer):
-    '''Получение jwt токена.'''
+    """Получение jwt токена."""
 
-    email = serializers.EmailField(write_only=True),
+    email = serializers.EmailField(write_only=True, max_length=256),
     confirmation_code = serializers.CharField(write_only=True),
     token = serializers.CharField(read_only=True)
 
     def validate(self, data):
-        '''
-        Проверяем, что передан username и confirmation_code.
-        '''
+        """Проверяем, что передан username и confirmation_code."""
+
         username = self.initial_data.get('username', None)
         confirmation_code = self.initial_data.get('confirmation_code', None)
         if username is None:
@@ -159,7 +158,7 @@ class GetTokenSerializer(serializers.Serializer):
 
 
 class RetrieveUpdateUserSerializer(serializers.ModelSerializer):
-    '''Изменение собственных данных пользователем.'''
+    """Изменение собственных данных пользователем."""
 
     class Meta:
         model = User
