@@ -1,18 +1,18 @@
 """Вьюхи к API."""
 
-from rest_framework import filters, permissions, viewsets, status
+from rest_framework import filters, mixins, permissions, status, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from django.shortcuts import get_object_or_404
+from reviews.models import Categories, Genres, Review, Titles, User
 
-from reviews.models import Categories, Titles, Genres, Review, User
-
+from .permissions import CustomPermission
 from .serializers import (
-    GenresSerializer, CategoriesSerializer, TitlesSerializers, RegistrationSerializer, ReviewSerializer
+    CategoriesSerializer, GenresSerializer, GetTokenSerializer,
+    RegistrationSerializer, RetrieveUpdateUserSerializer, ReviewSerializer,
+    TitlesSerializers,
 )
-from .permissions import AdminChangeOnly
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
@@ -20,7 +20,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
 
     queryset = Titles.objects.all()
     serializer_class = TitlesSerializers
-    permission_classes = (AdminChangeOnly,)
+    permission_classes = (CustomPermission,)
     filter_backends = (filters.SearchFilter,
                        filters.OrderingFilter)
     pagination_class = None
@@ -31,7 +31,6 @@ class TitlesViewSet(viewsets.ModelViewSet):
         'year': ['year'],
     }
     ordering_fields = ('name', 'year')
-
 
 
 class GenresViewSet(viewsets.ModelViewSet):
@@ -71,6 +70,7 @@ class RegistrationAPIView(APIView):
     """Регистрация нового пользователя."""
 
     serializer_class = RegistrationSerializer
+    permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
         serializer = RegistrationSerializer(data=request.data)
@@ -102,3 +102,32 @@ class RegistrationAPIView(APIView):
             return Response(
                 serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST)
+
+
+class GetTokenAPIView(APIView):
+    """Получение токена."""
+
+    serializer_class = GetTokenSerializer
+    permission_classes = (permissions.AllowAny,)
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class RetrieveUpdateViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
+                            viewsets.GenericViewSet):
+    '''Кастомный родительский ViewSet для наследования,
+    поддерживает только, GET, PUT и PATCH запросы
+    '''
+
+    def get_object(self):
+        return self.request.user
+
+
+class RetrieveUpdateUserViewSet(RetrieveUpdateViewSet):
+    """Изменение собственных данных пользователем."""
+
+    queryset = User.objects.all()
+    serializer_class = RetrieveUpdateUserSerializer

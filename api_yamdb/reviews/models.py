@@ -1,5 +1,3 @@
-"""Модели для произведений."""
-
 import random
 
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -9,8 +7,13 @@ from django.core.mail import send_mail
 from django.core.validators import RegexValidator
 from django.db import models
 
-
 CHARS_TO_SHOW = 15
+
+role_list = (
+    ('admin', 'Админ'),
+    ('user', 'Пользователь'),
+    ('moderator', 'Модератор')
+)
 
 
 class Categories(models.Model):
@@ -112,10 +115,10 @@ class CustomUserManager(UserManager):
         return user
 
     def create_superuser(self, username, email, password, **extra_fields):
-        '''
+        """
         Создает и возвращает суперпользователя с email, паролем, именем
         и присваивае суперпользователю роль admin.
-        '''
+        """
 
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
@@ -133,11 +136,6 @@ class User(AbstractUser):
     bio = models.TextField(
         'Биография',
         blank=True,
-    )
-    role_list = (
-        ('admin', 'Админ'),
-        ('user', 'Пользователь'),
-        ('moderator', 'Модератор')
     )
     role = models.CharField(
         'Роль пользователя',
@@ -168,7 +166,7 @@ class User(AbstractUser):
     objects = CustomUserManager()
 
     def create_jwt_token(self):
-        '''Создает и возвращает jwt токен для пользователя'''
+        """Создает и возвращает jwt токен для пользователя"""
 
         refresh = RefreshToken.for_user(self)
         return str(refresh.access_token)
@@ -178,7 +176,7 @@ class Review(models.Model):
     """Модели для отзывов."""
 
     title = models.ForeignKey(
-        Title,
+        Titles,
         on_delete=models.CASCADE,
         related_name='reviews',
     )
