@@ -22,9 +22,12 @@ class OnlyAdminPermission(BasePermission):
     """Разрешение для admin."""
 
     def has_permission(self, request, view):
-        return ((request.user.is_authenticated
-                and request.user.role == 'admin')
-                or request.user.is_superuser)
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        else:
+            return ((request.user.is_authenticated
+                    and request.user.role == 'admin')
+                    or request.user.is_superuser)
 
 
 class CustomPermission(BasePermission):
