@@ -6,16 +6,19 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 
 from reviews.models import Categories, Genres, Review, Titles, User
 
-from .permissions import CustomPermission
+
+from .permissions import CustomPermission, OnlyAdminPermission
 from .serializers import (
     CategoriesSerializer, CommentSerializer, GenresSerializer,
     GetTokenSerializer, RegistrationSerializer, ReviewSerializer,
     RetrieveUpdateUserSerializer, TitlesSerializers,
 )
+from .filters import TitleFilter
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
@@ -23,17 +26,14 @@ class TitlesViewSet(viewsets.ModelViewSet):
 
     queryset = Titles.objects.all()
     serializer_class = TitlesSerializers
-    permission_classes = (CustomPermission,)
+    permission_classes = (OnlyAdminPermission,)
     filter_backends = (filters.SearchFilter,
-                       filters.OrderingFilter)
+                       filters.OrderingFilter,
+                       DjangoFilterBackend)
     pagination_class = None
-    filterset_fields = {
-        'category': ['category__slug'],
-        'genre': ['genres__slug'],
-        'name': ['name'],
-        'year': ['year'],
-    }
+    filterset_class = TitleFilter
     ordering_fields = ('name', 'year')
+    pagination_class = LimitOffsetPagination
 
 
 class GenresViewSet(viewsets.ModelViewSet):
@@ -41,9 +41,10 @@ class GenresViewSet(viewsets.ModelViewSet):
 
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
-    permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (OnlyAdminPermission,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
+    lookup_field = 'slug'
 
 
 class CategoriesViewSet(viewsets.ModelViewSet):
@@ -51,7 +52,7 @@ class CategoriesViewSet(viewsets.ModelViewSet):
 
     queryset = Categories.objects.all()
     serializer_class = CategoriesSerializer
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (OnlyAdminPermission,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
 
