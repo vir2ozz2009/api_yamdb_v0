@@ -12,11 +12,11 @@ from django.shortcuts import get_object_or_404
 from reviews.models import Categories, Genres, Review, Titles, User
 
 
-from .permissions import CustomPermission, OnlyAdminPermission
+from .permissions import CustomPermission, OnlyAdminPermission, AdminPermission
 from .serializers import (
     CategoriesSerializer, CommentSerializer, GenresSerializer,
     GetTokenSerializer, RegistrationSerializer, ReviewSerializer,
-    RetrieveUpdateUserSerializer, TitlesSerializers,
+    RetrieveUpdateUserSerializer, TitlesSerializers, UserSerializer
 )
 from .filters import TitleFilter
 
@@ -149,16 +149,36 @@ class GetTokenAPIView(APIView):
 
 class RetrieveUpdateViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                             viewsets.GenericViewSet):
-    '''Кастомный родительский ViewSet для наследования,
-    поддерживает только, GET, PUT и PATCH запросы
     '''
-
+    Кастомный родительский ViewSet для наследования.
+    '''
     def get_object(self):
         return self.request.user
 
 
 class RetrieveUpdateUserViewSet(RetrieveUpdateViewSet):
-    """Изменение собственных данных пользователем."""
-
+    '''
+    Изменение собственных данных пользователем.
+    '''
     queryset = User.objects.all()
     serializer_class = RetrieveUpdateUserSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    """Изменение данных о пользователе администратором."""
+
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = (AdminPermission,)
+    lookup_field = 'username'
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
+
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PUT':
+            return Response(
+                {'error': 'Метод PUT не поддерживается'},
+                status=status.HTTP_405_METHOD_NOT_ALLOWED
+            )
+        return super().update(request, *args, **kwargs)
