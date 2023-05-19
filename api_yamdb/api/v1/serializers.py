@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from django.shortcuts import get_object_or_404
 from django.core.validators import RegexValidator
-
+from django.shortcuts import get_object_or_404
 from django.db.models import Avg
 
 from reviews.models import Categories, Comment, Genres, Review, Titles, User
@@ -152,7 +152,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
         """Проверка что имя пользователя не равно me."""
 
         if value == 'me':
-            raise serializers.ValidationError('Имя me недопускается!')
+            raise serializers.ValidationError('Имя "me" недопускается!')
         return value
 
     def create(self, validated_data):

@@ -11,6 +11,7 @@ from django.shortcuts import get_object_or_404
 
 from reviews.models import Categories, Genres, Review, Titles, User
 
+
 from .permissions import CustomPermission, OnlyAdminPermission
 from .serializers import (
     CategoriesSerializer, CommentSerializer, GenresSerializer,
@@ -61,6 +62,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     serializer_class = ReviewSerializer
     pagination_class = LimitOffsetPagination
+    permission_classes = (CustomPermission,)
 
     def get_queryset(self):
         title = get_object_or_404(Titles, id=self.kwargs.get('title_id'))
@@ -76,6 +78,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     """Список комментарией."""
 
     serializer_class = CommentSerializer
+    permission_classes = (CustomPermission,)
 
     def get_queryset(self):
         review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
