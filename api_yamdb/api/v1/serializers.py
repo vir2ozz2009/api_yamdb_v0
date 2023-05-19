@@ -3,9 +3,10 @@ import datetime as dt
 from rest_framework import serializers
 
 from django.core.validators import RegexValidator
-from django.shortcuts import get_object_or_404
 
-from reviews.models import Categories, Genres, Review, Titles, User
+from django.db.models import Avg
+
+from reviews.models import Categories, Comment, Genres, Review, Titles, User
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -43,37 +44,55 @@ class TitlesSerializers(serializers.ModelSerializer):
         read_only=False,
         slug_field='slug',
         queryset=Categories.objects.all(),
-        required=True
+        required=True,
     )
     genres = serializers.SlugRelatedField(
         many=True,
         slug_field='slug',
         queryset=Genres.objects.all(),
-        required=True
+        required=True,
     )
+
+    rating = serializers.SerializerMethodField()
 
     def validate_year(self, value):
         year = dt.date.today().year
-        if (year < value):
+        if year < value:
             raise serializers.ValidationError('Проверьте год произведения')
         return value
 
+    def get_rating(self, obj):
+        average_rating = obj.reviews.aggregate(Avg('score'))['score__avg']
+        return int(average_rating) if average_rating else None
+
     class Meta:
         model = Titles
-        fields = ('id', 'name', 'year', 'description', 'genres', 'category')
+        fields = (
+            'id',
+            'name',
+            'year',
+            'rating',
+            'description',
+            'genres',
+            'category',
+        )
 
 
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор для модели Review."""
 
-    title = serializers.SlugRelatedField(slug_field='name', read_only=True)
     author = serializers.SlugRelatedField(
         slug_field='username', read_only=True
     )
 
     class Meta:
         model = Review
-        fields = ('id', 'title', 'text', 'author', 'pub_date')
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
+
+    def validate_score(self, value):
+        if 0 > value > 10:
+            raise serializers.ValidationError('Оценка от 1 до 10')
+        return value
 
     def validate(self, data):
         title = data.get('title')
@@ -90,13 +109,26 @@ class ReviewSerializer(serializers.ModelSerializer):
         return data
 
 
+class CommentSerializer(serializers.ModelSerializer):
+    review = serializers.SlugRelatedField(slug_field='text', read_only=True)
+    author = serializers.SlugRelatedField(
+        slug_field='username', read_only=True
+    )
+
+    class Meta:
+        model = Comment
+        fields = ('id', 'review', 'text', 'author', 'pub_date')
+
+
 class RegistrationSerializer(serializers.ModelSerializer):
     """Регистрация нового пользователя."""
 
     password = serializers.CharField(required=False, write_only=True)
     username = serializers.CharField(
-        required=True, max_length=150,
-        validators=[RegexValidator(r'^[\w.+-]+\Z', 'Enter a valid username.')])
+        required=True,
+        max_length=150,
+        validators=[RegexValidator(r'^[\w.+-]+\Z', 'Enter a valid username.')],
+    )
     email = serializers.EmailField(required=True, max_length=254)
 
     class Meta:
@@ -107,7 +139,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'bio',
-            'password'
+            'password',
         )
         extra_kwargs = {
             'first_name': {'write_only': True},
@@ -119,7 +151,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
         """Проверка что имя пользователя не равно me."""
 
         if value == 'me':
-            raise serializers.ValidationError('Имя "me" недопускается!')
+            raise serializers.ValidationError('Имя 'me' недопускается!')
         return value
 
     def create(self, validated_data):

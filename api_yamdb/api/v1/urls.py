@@ -6,8 +6,8 @@ from django.urls import include, path
 
 from .routers import CustomRetrieveUpdateUserRouter
 from .views import (
-    CategoriesViewSet, GenresViewSet, GetTokenAPIView, RegistrationAPIView,
-    RetrieveUpdateUserViewSet, ReviewViewSet, TitlesViewSet,
+    CategoriesViewSet, CommentViewSet, GenresViewSet, GetTokenAPIView,
+    RegistrationAPIView, RetrieveUpdateUserViewSet, ReviewViewSet, TitlesViewSet
 )
 
 router = DefaultRouter()
@@ -19,6 +19,11 @@ router.register('genres', GenresViewSet)
 router_me.register(r'me', RetrieveUpdateUserViewSet, basename='me')
 router.register(
     r'titles/(?P<title_id>\d+)/reviews', ReviewViewSet, basename='reviews'
+)
+router.register(
+    r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
+    CommentViewSet,
+    basename='comments',
 )
 
 urlpatterns = [

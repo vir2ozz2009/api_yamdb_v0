@@ -1,17 +1,20 @@
 """Вьюхи к API."""
 
 from rest_framework import filters, mixins, permissions, status, viewsets
+
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from django.shortcuts import get_object_or_404
+
 from reviews.models import Categories, Genres, Review, Titles, User
 
-from .permissions import CustomPermission
+from .permissions import AdminChangeOnly, CustomPermission
 from .serializers import (
-    CategoriesSerializer, GenresSerializer, GetTokenSerializer,
-    RegistrationSerializer, RetrieveUpdateUserSerializer, ReviewSerializer,
-    TitlesSerializers,
+    CategoriesSerializer, CommentSerializer, GenresSerializer,
+    GetTokenSerializer, RegistrationSerializer, ReviewSerializer,
+    RetrieveUpdateUserSerializer, TitlesSerializers,
 )
 
 
@@ -58,11 +61,29 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     serializer_class = ReviewSerializer
     pagination_class = LimitOffsetPagination
-    queryset = Review.objects.select_related('title')
+
+    def get_queryset(self):
+        title = get_object_or_404(Titles, id=self.kwargs.get('title_id'))
+        return title.reviews.all()
 
     def perform_create(self, serializer):
         serializer.save(
-            author=self.request.user, title_id=self.request.data.get('title')
+            author=self.request.user, title_id=self.kwargs.get('title_id')
+        )
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    """Список комментарией."""
+
+    serializer_class = CommentSerializer
+
+    def get_queryset(self):
+        review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
+        return review.comments.select_related('author')
+
+    def perform_create(self, serializer):
+        serializer.save(
+            author=self.request.user, review_id=self.kwargs.get('review_id')
         )
 
 
@@ -77,23 +98,29 @@ class RegistrationAPIView(APIView):
         if serializer.is_valid():
             username = serializer.validated_data.get('username')
             email = serializer.validated_data.get('email')
-            if (User.objects.filter(username=username).exists()
-               and User.objects.filter(email=email).exists()):
+            if (
+                User.objects.filter(username=username).exists()
+                and User.objects.filter(email=email).exists()
+            ):
                 return Response(
-                    {'error': 'Пользователь с таким username'
-                     'или email уже существует'},
-                    status=status.HTTP_200_OK
+                    {
+                        'error': 'Пользователь с таким username'
+                        'или email уже существует'
+                    },
+                    status=status.HTTP_200_OK,
                 )
             elif User.objects.filter(email=email).exists():
                 return Response(
                     {'error': 'Это email уже используется'},
-                    status=status.HTTP_400_BAD_REQUEST
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
-            elif (User.objects.filter(username=username).exists()
-                  and not User.objects.filter(email=email).exists()):
+            elif (
+                User.objects.filter(username=username).exists()
+                and not User.objects.filter(email=email).exists()
+            ):
                 return Response(
                     {'error': 'Неправильный email'},
-                    status=status.HTTP_400_BAD_REQUEST
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
             else:
                 serializer.save()
@@ -101,7 +128,8 @@ class RegistrationAPIView(APIView):
         else:
             return Response(
                 serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST)
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class GetTokenAPIView(APIView):

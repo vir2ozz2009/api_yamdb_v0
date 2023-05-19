@@ -4,7 +4,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.core.mail import send_mail
-from django.core.validators import RegexValidator
+from django.core.validators import (
+    MaxValueValidator, MinValueValidator, RegexValidator,
+)
 from django.db import models
 
 CHARS_TO_SHOW = 15
@@ -21,15 +23,12 @@ class Categories(models.Model):
 
     name = models.CharField(max_length=256, blank=False, null=False)
     slug = models.SlugField(
-        unique=True,
-        max_length=50,
-        blank=False,
-        null=False
+        unique=True, max_length=50, blank=False, null=False
     )
     validators = [
         RegexValidator(
             regex=r'^[-a-zA-Z0-9_]+$',
-            message='Используйте цифры, латинские буквы, дефис, подчеркивание.'
+            message='Используйте цифры, латинские буквы, дефис, подчеркивание.',
         )
     ]
 
@@ -42,15 +41,12 @@ class Genres(models.Model):
 
     name = models.CharField(max_length=256, blank=False, null=False)
     slug = models.SlugField(
-        unique=True,
-        max_length=50,
-        blank=False,
-        null=False
+        unique=True, max_length=50, blank=False, null=False
     )
     validators = [
         RegexValidator(
             regex=r'^[-a-zA-Z0-9_]+$',
-            message='Используйте цифры, латинские буквы, дефис, подчеркивание.'
+            message='Используйте цифры, латинские буквы, дефис, подчеркивание.',
         )
     ]
 
@@ -69,13 +65,10 @@ class Titles(models.Model):
         on_delete=models.SET_NULL,
         related_name='titles',
         blank=True,
-        null=True
+        null=True,
     )
     genres = models.ManyToManyField(
-        Genres,
-        related_name='titles',
-        blank=True,
-        null=True
+        Genres, related_name='titles', blank=True, null=True
     )
 
     def __str__(self):
@@ -100,7 +93,7 @@ class CustomUserManager(UserManager):
             username=username,
             email=self.normalize_email(email),
             confirmation_code=random.randint(100000000, 999999999),
-            **extra_fields
+            **extra_fields,
         )
         user.set_password(password)
         user.save()
@@ -110,7 +103,7 @@ class CustomUserManager(UserManager):
             f'{user.confirmation_code}',
             'yamdb@example.com',
             [email],
-            fail_silently=False
+            fail_silently=False,
         )
         return user
 
@@ -138,31 +131,14 @@ class User(AbstractUser):
         blank=True,
     )
     role = models.CharField(
-        'Роль пользователя',
-        choices=role_list,
-        max_length=10,
-        default='user'
+        'Роль пользователя', choices=role_list, max_length=10, default='user'
     )
     confirmation_code = models.CharField(
-        'Код подтверждения',
-        max_length=9,
-        blank=True
+        'Код подтверждения', max_length=9, blank=True
     )
-    email = models.EmailField(
-        'Почта',
-        max_length=254,
-        unique=True
-    )
-    first_name = models.CharField(
-        'Имя',
-        max_length=150,
-        blank=True
-    )
-    last_name = models.CharField(
-        'Фамилия',
-        max_length=150,
-        blank=True
-    )
+    email = models.EmailField('Почта', max_length=254, unique=True)
+    first_name = models.CharField('Имя', max_length=150, blank=True)
+    last_name = models.CharField('Фамилия', max_length=150, blank=True)
     objects = CustomUserManager()
 
     def create_jwt_token(self):
@@ -176,15 +152,31 @@ class Review(models.Model):
     """Модели для отзывов."""
 
     title = models.ForeignKey(
-        Titles,
-        on_delete=models.CASCADE,
-        related_name='reviews',
+        Titles, on_delete=models.CASCADE, related_name='reviews', null=True
     )
-    text = models.TextField()
+    text = models.TextField(verbose_name='Отзыв', null=False)
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='reviews'
+    )
+    score = models.IntegerField(
+        'Оценка',
+        validators=(MinValueValidator(1), MaxValueValidator(10)),
+        error_messages={'validators': 'Оценка от 1 до 10'},
     )
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
 
     def __str__(self):
         return self.text[:CHARS_TO_SHOW]
+
+
+class Comment(models.Model):
+    review = models.ForeignKey(
+        Review, on_delete=models.CASCADE, related_name='comments'
+    )
+    text = models.TextField()
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='comments'
+    )
+    pub_date = models.DateTimeField(
+        'Дата публикации', auto_now_add=True, db_index=True
+    )

@@ -11,7 +11,7 @@ class TitlesAdmin(admin.ModelAdmin):
 
 
 class ReviewAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'title', 'text', 'author')
+    list_display = ('pk', 'title_id', 'text', 'author', 'score', 'pub_date')
     search_fields = ('text',)
     list_filter = ('pub_date',)
     empty_value_display = '-пусто-'
