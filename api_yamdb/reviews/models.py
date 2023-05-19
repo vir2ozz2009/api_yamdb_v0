@@ -1,5 +1,3 @@
-"""Модели для произведений."""
-
 import random
 
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -12,6 +10,12 @@ from django.core.validators import (
 from django.db import models
 
 CHARS_TO_SHOW = 15
+
+role_list = (
+    ('admin', 'Админ'),
+    ('user', 'Пользователь'),
+    ('moderator', 'Модератор')
+)
 
 
 class Categories(models.Model):
@@ -125,11 +129,6 @@ class User(AbstractUser):
     bio = models.TextField(
         'Биография',
         blank=True,
-    )
-    role_list = (
-        ('admin', 'Админ'),
-        ('user', 'Пользователь'),
-        ('moderator', 'Модератор'),
     )
     role = models.CharField(
         'Роль пользователя', choices=role_list, max_length=10, default='user'
