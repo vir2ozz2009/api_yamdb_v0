@@ -204,3 +204,13 @@ class RetrieveUpdateUserSerializer(serializers.ModelSerializer):
             'role'
         )
         read_only_fields = ('role',)
+
+
+class UserSerializer(serializers.ModelSerializer):
+    '''
+    Изменение данных о пользователе администратором.
+    '''
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'first_name', 'last_name', 'bio',
+                  'role')

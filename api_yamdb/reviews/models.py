@@ -86,9 +86,9 @@ class CustomUserManager(UserManager):
         """
 
         if username is None:
-            raise TypeError('Users must have a username.')
+            raise TypeError('Пользователь должен иметь username.')
         if email is None:
-            raise TypeError('Users must have an email address.')
+            raise TypeError('Пользователь должен иметь email.')
         user = self.model(
             username=username,
             email=self.normalize_email(email),
