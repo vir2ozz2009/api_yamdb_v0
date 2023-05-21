@@ -6,7 +6,7 @@ class TitleFilter(django_filters.FilterSet):
     """Фильтр для поиска по жанра, категориям и именам."""
 
     category = django_filters.CharFilter(field_name='category__slug')
-    genres = django_filters.CharFilter(field_name='genres__slug')
+    genre = django_filters.CharFilter(field_name='genres__slug')
     name = django_filters.CharFilter(
         field_name='name',
         lookup_expr='icontains'
@@ -15,4 +15,4 @@ class TitleFilter(django_filters.FilterSet):
 
     class Meta:
         model = Titles
-        fields = ('category', 'genres', 'name', 'year')
+        fields = ('category', 'genre', 'name', 'year')

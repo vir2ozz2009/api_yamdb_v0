@@ -55,25 +55,27 @@ class TitlesPostSerializer(serializers.ModelSerializer):
         queryset=Categories.objects.all(),
         slug_field='slug'
     )
-    genres = serializers.SlugRelatedField(
+    genre = serializers.SlugRelatedField(
         required=True,
         queryset=Genres.objects.all(),
         slug_field='slug',
-        many=True
+        many=True,
+        source='genres'
     )
 
     class Meta:
-        fields = '__all__'
         model = Titles
+        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
 
 
 class TitlesGetSerializer(serializers.ModelSerializer):
     """Сериализатор для GET-запросов к произведениям."""
 
     category = CategoriesSerializer(read_only=True)
-    genres = GenresSerializer(
+    genre = GenresSerializer(
         read_only=True,
-        many=True
+        many=True,
+        source='genres'
     )
     rating = serializers.IntegerField(read_only=True)
 
@@ -88,8 +90,9 @@ class TitlesGetSerializer(serializers.ModelSerializer):
         return int(average_rating) if average_rating else None
 
     class Meta:
-        fields = '__all__'
         model = Titles
+        fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category')
+
 
 
 class ReviewSerializer(serializers.ModelSerializer):
