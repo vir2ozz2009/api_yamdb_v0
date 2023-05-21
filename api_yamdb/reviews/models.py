@@ -21,10 +21,8 @@ role_list = (
 class Categories(models.Model):
     """Модель категорий (типов) произведения."""
 
-    name = models.CharField(max_length=256, blank=False, null=False)
-    slug = models.SlugField(
-        unique=True, max_length=50, blank=False, null=False
-    )
+    name = models.CharField(max_length=256)
+    slug = models.SlugField(unique=True, max_length=50)
     validators = [
         RegexValidator(
             regex=r'^[-a-zA-Z0-9_]+$',
@@ -33,16 +31,15 @@ class Categories(models.Model):
     ]
 
     def __str__(self):
+        """Текстовое отображение категорий."""
         return self.name[:CHARS_TO_SHOW]
 
 
 class Genres(models.Model):
     """Модель жанров произведения."""
 
-    name = models.CharField(max_length=256, blank=False, null=False)
-    slug = models.SlugField(
-        unique=True, max_length=50, blank=False, null=False
-    )
+    name = models.CharField(max_length=256)
+    slug = models.SlugField(unique=True, max_length=50)
     validators = [
         RegexValidator(
             regex=r'^[-a-zA-Z0-9_]+$',
@@ -51,6 +48,7 @@ class Genres(models.Model):
     ]
 
     def __str__(self):
+        """Текстовое отображение жанров."""
         return self.name[:CHARS_TO_SHOW]
 
 
@@ -67,11 +65,10 @@ class Titles(models.Model):
         blank=True,
         null=True,
     )
-    genres = models.ManyToManyField(
-        Genres, related_name='titles', blank=True, null=True
-    )
+    genres = models.ManyToManyField(Genres, related_name='titles', blank=True)
 
     def __str__(self):
+        """Текстовое отображение произведений."""
         return self.name[:CHARS_TO_SHOW]
 
 
@@ -84,7 +81,6 @@ class CustomUserManager(UserManager):
         и отправляет confirmation code на почту для дальнейшего получения
         jwt токена.
         """
-
         if username is None:
             raise TypeError('Пользователь должен иметь username.')
         if email is None:
@@ -112,7 +108,6 @@ class CustomUserManager(UserManager):
         Создает и возвращает суперпользователя с email, паролем, именем
         и присваивае суперпользователю роль admin.
         """
-
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('role', 'admin')
@@ -166,10 +161,13 @@ class Review(models.Model):
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
 
     def __str__(self):
+        """Текстовое отображение отзывов."""
         return self.text[:CHARS_TO_SHOW]
 
 
 class Comment(models.Model):
+    """Модели для комментариев."""
+
     review = models.ForeignKey(
         Review, on_delete=models.CASCADE, related_name='comments'
     )

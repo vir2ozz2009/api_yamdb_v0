@@ -16,28 +16,33 @@ from .permissions import CustomPermission, OnlyAdminPermission, AdminPermission
 from .serializers import (
     CategoriesSerializer, CommentSerializer, GenresSerializer,
     GetTokenSerializer, RegistrationSerializer, ReviewSerializer,
-    RetrieveUpdateUserSerializer, TitlesSerializers, UserSerializer
+    RetrieveUpdateUserSerializer, UserSerializer,
+    TitlesGetSerializer, TitlesPostSerializer
 )
 from .filters import TitleFilter
+from .mixins import DestroyCreateListMixins
+from .pagination import GenresAndCategoriesPagination
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
     """Вьюсет модели Titles."""
 
     queryset = Titles.objects.all()
-    serializer_class = TitlesSerializers
     permission_classes = (OnlyAdminPermission,)
-    filter_backends = (filters.SearchFilter,
-                       filters.OrderingFilter,
-                       DjangoFilterBackend)
-    pagination_class = None
+    filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     filterset_class = TitleFilter
     ordering_fields = ('name', 'year')
     pagination_class = LimitOffsetPagination
 
+    def get_serializer_class(self):
+        """Выбор сериализатора в зависимости от типа запроса."""
+        if self.request.method == 'GET':
+            return TitlesGetSerializer
+        return TitlesPostSerializer
 
-class GenresViewSet(viewsets.ModelViewSet):
-    """Вьюсет модели Genres"""
+
+class GenresViewSet(DestroyCreateListMixins):
+    """Вьюсет модели Genres."""
 
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
@@ -45,16 +50,59 @@ class GenresViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
+    pagination_class = GenresAndCategoriesPagination
+
+    def create(self, request, *args, **kwargs):
+        """Создание жанров с учетом того что поле slug уникальное."""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        slug = serializer.validated_data['slug']
+
+        if Genres.objects.filter(slug=slug).exists():
+            return Response(
+                {'error': 'Жанр с таким slug уже существует.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
 
 
-class CategoriesViewSet(viewsets.ModelViewSet):
-    """Вьюсет модели Genres"""
+class CategoriesViewSet(DestroyCreateListMixins):
+    """Вьюсет модели Categories"""
 
     queryset = Categories.objects.all()
     serializer_class = CategoriesSerializer
     permission_classes = (OnlyAdminPermission,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
+    lookup_field = 'slug'
+    pagination_class = GenresAndCategoriesPagination
+
+    def create(self, request, *args, **kwargs):
+        """Создание категорий с учетом того что поле slug уникальное."""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        slug = serializer.validated_data['slug']
+
+        if Categories.objects.filter(slug=slug).exists():
+            return Response(
+                {'error': 'Категория с таким slug уже существует.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -149,17 +197,15 @@ class GetTokenAPIView(APIView):
 
 class RetrieveUpdateViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
                             viewsets.GenericViewSet):
-    '''
-    Кастомный родительский ViewSet для наследования.
-    '''
+    """Кастомный родительский ViewSet для наследования."""
+
     def get_object(self):
         return self.request.user
 
 
 class RetrieveUpdateUserViewSet(RetrieveUpdateViewSet):
-    '''
-    Изменение собственных данных пользователем.
-    '''
+    """Изменение собственных данных пользователем."""
+
     queryset = User.objects.all()
     serializer_class = RetrieveUpdateUserSerializer
     permission_classes = (permissions.IsAuthenticated,)

@@ -4,6 +4,8 @@ from .models import Categories, Genres, Review, Titles, User, Comment
 
 
 class TitlesAdmin(admin.ModelAdmin):
+    """Админка модели Titles."""
+
     list_display = ('pk', 'name', 'year', 'description', 'category')
     search_fields = ('name',)
     list_filter = ('id',)
@@ -11,6 +13,8 @@ class TitlesAdmin(admin.ModelAdmin):
 
 
 class ReviewAdmin(admin.ModelAdmin):
+    """Админка модели Review."""
+
     list_display = ('pk', 'title_id', 'text', 'author', 'score', 'pub_date')
     search_fields = ('text',)
     list_filter = ('pub_date',)

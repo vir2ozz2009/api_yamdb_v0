@@ -1,6 +1,7 @@
 import datetime as dt
 
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 
 from django.shortcuts import get_object_or_404
 from django.core.validators import RegexValidator
@@ -18,9 +19,13 @@ class CategoriesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Categories
-        fields = ('id', 'name', 'slug')
+        fields = ('name', 'slug')
+        lookup_field = 'slug'
         extra_kwargs = {
-            'slug': {'validators': [RegexValidator(r'^[-a-zA-Z0-9_]+$')]}
+            'slug': {'validators': [
+                UniqueValidator(queryset=Categories.objects.all()),
+                RegexValidator(r'^[-a-zA-Z0-9_]+$')
+            ]}
         }
 
 
@@ -32,29 +37,45 @@ class GenresSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Genres
-        fields = ('id', 'name', 'slug')
+        fields = ('name', 'slug')
+        lookup_field = 'slug'
         extra_kwargs = {
-            'slug': {'validators': [RegexValidator(r'^[-a-zA-Z0-9_]+$')]}
+            'slug': {'validators': [
+                UniqueValidator(queryset=Genres.objects.all()),
+                RegexValidator(r'^[-a-zA-Z0-9_]+$')
+            ]}
         }
 
 
-class TitlesSerializers(serializers.ModelSerializer):
-    name = serializers.CharField(max_length=256, required=True)
-    year = serializers.IntegerField(required=True)
+class TitlesPostSerializer(serializers.ModelSerializer):
+    """Сериализатор для POST-запросов к произведениям."""
+
     category = serializers.SlugRelatedField(
-        read_only=False,
-        slug_field='slug',
-        queryset=Categories.objects.all(),
         required=True,
+        queryset=Categories.objects.all(),
+        slug_field='slug'
     )
     genres = serializers.SlugRelatedField(
-        many=True,
-        slug_field='slug',
-        queryset=Genres.objects.all(),
         required=True,
+        queryset=Genres.objects.all(),
+        slug_field='slug',
+        many=True
     )
 
-    rating = serializers.SerializerMethodField()
+    class Meta:
+        fields = '__all__'
+        model = Titles
+
+
+class TitlesGetSerializer(serializers.ModelSerializer):
+    """Сериализатор для GET-запросов к произведениям."""
+
+    category = CategoriesSerializer(read_only=True)
+    genres = GenresSerializer(
+        read_only=True,
+        many=True
+    )
+    rating = serializers.IntegerField(read_only=True)
 
     def validate_year(self, value):
         year = dt.date.today().year
@@ -67,16 +88,8 @@ class TitlesSerializers(serializers.ModelSerializer):
         return int(average_rating) if average_rating else None
 
     class Meta:
+        fields = '__all__'
         model = Titles
-        fields = (
-            'id',
-            'name',
-            'year',
-            'rating',
-            'description',
-            'genres',
-            'category',
-        )
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -111,6 +124,8 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели Comment."""
+
     review = serializers.SlugRelatedField(slug_field='text', read_only=True)
     author = serializers.SlugRelatedField(
         slug_field='username', read_only=True
@@ -150,14 +165,12 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
     def validate_username(self, value):
         """Проверка что имя пользователя не равно me."""
-
         if value == 'me':
             raise serializers.ValidationError('Имя "me" недопускается!')
         return value
 
     def create(self, validated_data):
         """Создаем нового пользователя с валидированными данными."""
-
         return User.objects.create_user(**validated_data)
 
 
@@ -207,9 +220,8 @@ class RetrieveUpdateUserSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    '''
-    Изменение данных о пользователе администратором.
-    '''
+    """Изменение данных о пользователе администратором."""
+
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name', 'last_name', 'bio',
