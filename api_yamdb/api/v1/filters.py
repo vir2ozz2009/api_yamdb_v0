@@ -3,6 +3,8 @@ from reviews.models import Titles
 
 
 class TitleFilter(django_filters.FilterSet):
+    """Фильтр для поиска по жанра, категориям и именам."""
+
     category = django_filters.CharFilter(field_name='category__slug')
     genres = django_filters.CharFilter(field_name='genres__slug')
     name = django_filters.CharFilter(
