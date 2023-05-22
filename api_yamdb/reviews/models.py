@@ -160,6 +160,13 @@ class Review(models.Model):
     )
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=('title', 'author',),
+                name='unique review'
+            )]
+
     def __str__(self):
         """Текстовое отображение отзывов."""
         return self.text[:CHARS_TO_SHOW]

@@ -94,7 +94,6 @@ class TitlesGetSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category')
 
 
-
 class ReviewSerializer(serializers.ModelSerializer):
     """Сериализатор для модели Review."""
 
@@ -104,7 +103,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = ('id', 'text', 'author', 'score', 'pub_date')
+        fields = ('id', 'title', 'text', 'author', 'score', 'pub_date')
 
     def validate_score(self, value):
         if 0 > value > 10:
