@@ -147,7 +147,7 @@ class Review(models.Model):
     """Модели для отзывов."""
 
     title = models.ForeignKey(
-        Title, on_delete=models.CASCADE, related_name='reviews', null=True
+        Titles, on_delete=models.CASCADE, related_name='reviews', null=True
     )
     text = models.TextField(verbose_name='Отзыв', null=False)
     author = models.ForeignKey(
