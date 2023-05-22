@@ -1,15 +1,16 @@
 """Вьюхи к API."""
 
-from rest_framework import filters, mixins, permissions, status, viewsets, serializers
+from rest_framework import filters, permissions, status, viewsets, serializers
 
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from django.db.models import Avg
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 
-from reviews.models import Categories, Genres, Review, Titles, User
+from reviews.models import Category, Genre, Review, Title, User
 
 
 from .permissions import CustomPermission, OnlyAdminPermission, AdminPermission
@@ -20,14 +21,14 @@ from .serializers import (
     TitlesGetSerializer, TitlesPostSerializer
 )
 from .filters import TitleFilter
-from .mixins import DestroyCreateListMixins
+from .mixins import DestroyCreateListMixins, RetrieveUpdateViewSet
 from .pagination import GenresAndCategoriesPagination
 
 
 class TitlesViewSet(viewsets.ModelViewSet):
     """Вьюсет модели Titles."""
 
-    queryset = Titles.objects.all()
+    queryset = Title.objects.annotate(rating=Avg('reviews__score'))
     permission_classes = (OnlyAdminPermission,)
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     filterset_class = TitleFilter
@@ -44,7 +45,7 @@ class TitlesViewSet(viewsets.ModelViewSet):
 class GenresViewSet(DestroyCreateListMixins):
     """Вьюсет модели Genres."""
 
-    queryset = Genres.objects.all()
+    queryset = Genre.objects.all()
     serializer_class = GenresSerializer
     permission_classes = (OnlyAdminPermission,)
     filter_backends = (filters.SearchFilter,)
@@ -58,7 +59,7 @@ class GenresViewSet(DestroyCreateListMixins):
         serializer.is_valid(raise_exception=True)
         slug = serializer.validated_data['slug']
 
-        if Genres.objects.filter(slug=slug).exists():
+        if Genre.objects.filter(slug=slug).exists():
             return Response(
                 {'error': 'Жанр с таким slug уже существует.'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -76,7 +77,7 @@ class GenresViewSet(DestroyCreateListMixins):
 class CategoriesViewSet(DestroyCreateListMixins):
     """Вьюсет модели Categories"""
 
-    queryset = Categories.objects.all()
+    queryset = Category.objects.all()
     serializer_class = CategoriesSerializer
     permission_classes = (OnlyAdminPermission,)
     filter_backends = (filters.SearchFilter,)
@@ -90,7 +91,7 @@ class CategoriesViewSet(DestroyCreateListMixins):
         serializer.is_valid(raise_exception=True)
         slug = serializer.validated_data['slug']
 
-        if Categories.objects.filter(slug=slug).exists():
+        if Category.objects.filter(slug=slug).exists():
             return Response(
                 {'error': 'Категория с таким slug уже существует.'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -113,16 +114,20 @@ class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = (CustomPermission,)
 
     def get_queryset(self):
-        title = get_object_or_404(Titles, id=self.kwargs.get('title_id'))
+        """Получение отзывов."""
+        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
         return title.reviews.all()
 
     def perform_create(self, serializer):
-        title = get_object_or_404(Titles, id=self.kwargs.get('title_id'))
+        """Создание отзывов."""
+        title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
         author = self.request.user
 
         existing_review = title.reviews.filter(author=author).exists()
         if existing_review:
-            raise serializers.ValidationError('Отзыв на произведение уже написан.')
+            raise serializers.ValidationError(
+                'Отзыв на произведение уже написан.'
+            )
         serializer.save(author=author, title=title)
 
 
@@ -133,10 +138,12 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = (CustomPermission,)
 
     def get_queryset(self):
+        """Получение комментариев."""
         review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
         return review.comments.select_related('author')
 
     def perform_create(self, serializer):
+        """Сохранение комментариев."""
         review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
         serializer.save(author=self.request.user, review=review)
 
@@ -148,6 +155,7 @@ class RegistrationAPIView(APIView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
+        """Обработка POST-запросов для регистрации нового пользователя."""
         serializer = RegistrationSerializer(data=request.data)
         if serializer.is_valid():
             username = serializer.validated_data.get('username')
@@ -163,12 +171,12 @@ class RegistrationAPIView(APIView):
                     },
                     status=status.HTTP_200_OK,
                 )
-            elif User.objects.filter(email=email).exists():
+            if User.objects.filter(email=email).exists():
                 return Response(
                     {'error': 'Это email уже используется'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            elif (
+            if (
                 User.objects.filter(username=username).exists()
                 and not User.objects.filter(email=email).exists()
             ):
@@ -176,14 +184,9 @@ class RegistrationAPIView(APIView):
                     {'error': 'Неправильный email'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            else:
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            return Response(
-                serializer.errors,
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GetTokenAPIView(APIView):
@@ -193,17 +196,10 @@ class GetTokenAPIView(APIView):
     permission_classes = (permissions.AllowAny,)
 
     def post(self, request):
+        """Обработка POST-запросов для получения токена."""
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
-class RetrieveUpdateViewSet(mixins.RetrieveModelMixin, mixins.UpdateModelMixin,
-                            viewsets.GenericViewSet):
-    """Кастомный родительский ViewSet для наследования."""
-
-    def get_object(self):
-        return self.request.user
 
 
 class RetrieveUpdateUserViewSet(RetrieveUpdateViewSet):
@@ -225,6 +221,7 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ('username',)
 
     def update(self, request, *args, **kwargs):
+        """Обработка запросов на обновление данных о пользователе."""
         if request.method == 'PUT':
             return Response(
                 {'error': 'Метод PUT не поддерживается'},

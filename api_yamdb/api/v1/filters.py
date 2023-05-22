@@ -1,12 +1,14 @@
+"""Кастомные фильтры."""
+
 import django_filters
-from reviews.models import Titles
+from reviews.models import Title
 
 
 class TitleFilter(django_filters.FilterSet):
     """Фильтр для поиска по жанра, категориям и именам."""
 
     category = django_filters.CharFilter(field_name='category__slug')
-    genre = django_filters.CharFilter(field_name='genres__slug')
+    genre = django_filters.CharFilter(field_name='genre__slug')
     name = django_filters.CharFilter(
         field_name='name',
         lookup_expr='icontains'
@@ -14,5 +16,5 @@ class TitleFilter(django_filters.FilterSet):
     year = django_filters.NumberFilter(field_name='year')
 
     class Meta:
-        model = Titles
+        model = Title
         fields = ('category', 'genre', 'name', 'year')
