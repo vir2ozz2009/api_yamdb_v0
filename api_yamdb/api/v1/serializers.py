@@ -84,7 +84,6 @@ class TitlesGetSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Проверьте год произведения')
         return value
 
-
     class Meta:
         model = Title
         fields = (

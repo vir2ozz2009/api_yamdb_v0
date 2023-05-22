@@ -28,7 +28,7 @@ class Category(models.Model):
     validators = [
         RegexValidator(
             regex=r'^[-a-zA-Z0-9_]+$',
-            message='Используйте цифры, латинские буквы, дефис, подчеркивание.',
+            message='Используйте цифры, латинские буквы, дефис, подчеркивание.'
         )
     ]
 
@@ -45,7 +45,7 @@ class Genre(models.Model):
     validators = [
         RegexValidator(
             regex=r'^[-a-zA-Z0-9_]+$',
-            message='Используйте цифры, латинские буквы, дефис, подчеркивание.',
+            message='Используйте цифры, латинские буквы, дефис, подчеркивание.'
         )
     ]
 
