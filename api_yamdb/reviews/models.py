@@ -147,7 +147,7 @@ class Review(models.Model):
     """Модели для отзывов."""
 
     title = models.ForeignKey(
-        Titles, on_delete=models.CASCADE, related_name='reviews', null=True
+        Title, on_delete=models.CASCADE, related_name='reviews', null=True
     )
     text = models.TextField(verbose_name='Отзыв', null=False)
     author = models.ForeignKey(
@@ -159,6 +159,13 @@ class Review(models.Model):
         error_messages={'validators': 'Оценка от 1 до 10'},
     )
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=('title', 'author',),
+                name='unique review'
+            )]
 
     def __str__(self):
         """Текстовое отображение отзывов."""

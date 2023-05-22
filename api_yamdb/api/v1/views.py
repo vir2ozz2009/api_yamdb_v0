@@ -1,6 +1,6 @@
 """Вьюхи к API."""
 
-from rest_framework import filters, mixins, permissions, status, viewsets
+from rest_framework import filters, mixins, permissions, status, viewsets, serializers
 
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
@@ -117,9 +117,13 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return title.reviews.all()
 
     def perform_create(self, serializer):
-        serializer.save(
-            author=self.request.user, title_id=self.kwargs.get('title_id')
-        )
+        title = get_object_or_404(Titles, id=self.kwargs.get('title_id'))
+        author = self.request.user
+
+        existing_review = title.reviews.filter(author=author).exists()
+        if existing_review:
+            raise serializers.ValidationError('Отзыв на произведение уже написан.')
+        serializer.save(author=author, title=title)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -133,9 +137,8 @@ class CommentViewSet(viewsets.ModelViewSet):
         return review.comments.select_related('author')
 
     def perform_create(self, serializer):
-        serializer.save(
-            author=self.request.user, review_id=self.kwargs.get('review_id')
-        )
+        review = get_object_or_404(Review, pk=self.kwargs.get('review_id'))
+        serializer.save(author=self.request.user, review=review)
 
 
 class RegistrationAPIView(APIView):
