@@ -1,6 +1,6 @@
 """Кастомные миксины и вьюсеты."""
 
-from rest_framework import mixins, viewsets, filters
+from rest_framework import filters, mixins, viewsets
 
 from .permissions import OnlyAdminPermission
 

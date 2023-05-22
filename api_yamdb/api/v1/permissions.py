@@ -1,9 +1,10 @@
 """Пермишены."""
 
-from rest_framework.permissions import BasePermission
-from rest_framework import permissions
 
-from reviews.models import Review, User, Comment
+from rest_framework import permissions
+from rest_framework.permissions import BasePermission
+
+from reviews.models import Comment, Review, User
 
 
 class OnlyAdminPermission(BasePermission):

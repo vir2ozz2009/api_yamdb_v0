@@ -7,8 +7,8 @@ from django.urls import include, path
 from .routers import CustomRetrieveUpdateUserRouter
 from .views import (
     CategoriesViewSet, CommentViewSet, GenresViewSet, GetTokenAPIView,
-    UserViewSet, RegistrationAPIView, RetrieveUpdateUserViewSet,
-    ReviewViewSet, TitlesViewSet
+    RegistrationAPIView, RetrieveUpdateUserViewSet, ReviewViewSet,
+    TitlesViewSet, UserViewSet,
 )
 
 router = DefaultRouter()

@@ -5,8 +5,8 @@ import datetime as dt
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from django.shortcuts import get_object_or_404
 from django.core.validators import RegexValidator
+from django.shortcuts import get_object_or_404
 
 from reviews.models import Category, Comment, Genre, Review, Title, User
 

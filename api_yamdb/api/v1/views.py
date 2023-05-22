@@ -1,28 +1,26 @@
 """Вьюхи к API."""
 
-from rest_framework import filters, permissions, status, viewsets, serializers
-
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, permissions, serializers, status, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from django.db.models import Avg
-from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 
 from reviews.models import Category, Genre, Review, Title, User
 
-
-from .permissions import CustomPermission, OnlyAdminPermission, AdminPermission
-from .serializers import (
-    CategoriesSerializer, CommentSerializer, GenresSerializer,
-    GetTokenSerializer, RegistrationSerializer, ReviewSerializer,
-    RetrieveUpdateUserSerializer, UserSerializer,
-    TitlesGetSerializer, TitlesPostSerializer
-)
 from .filters import TitleFilter
 from .mixins import DestroyCreateListMixins, RetrieveUpdateViewSet
 from .pagination import GenresAndCategoriesPagination
+from .permissions import AdminPermission, CustomPermission, OnlyAdminPermission
+from .serializers import (
+    CategoriesSerializer, CommentSerializer, GenresSerializer,
+    GetTokenSerializer, RegistrationSerializer, RetrieveUpdateUserSerializer,
+    ReviewSerializer, TitlesGetSerializer, TitlesPostSerializer,
+    UserSerializer,
+)
 
 
 class TitlesViewSet(viewsets.ModelViewSet):

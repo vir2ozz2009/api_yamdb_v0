@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 
-from .models import Category, Genre, Review, Title, User, Comment
+from .models import Category, Comment, Genre, Review, Title, User
 
 
 class TitleAdmin(admin.ModelAdmin):
