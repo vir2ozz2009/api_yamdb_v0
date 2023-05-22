@@ -1,14 +1,14 @@
+"""Сериалайзеры."""
+
 import datetime as dt
 
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
-from django.shortcuts import get_object_or_404
 from django.core.validators import RegexValidator
 from django.shortcuts import get_object_or_404
-from django.db.models import Avg
 
-from reviews.models import Categories, Comment, Genres, Review, Titles, User
+from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -18,12 +18,12 @@ class CategoriesSerializer(serializers.ModelSerializer):
     slug = serializers.SlugField(max_length=50, required=True)
 
     class Meta:
-        model = Categories
+        model = Category
         fields = ('name', 'slug')
         lookup_field = 'slug'
         extra_kwargs = {
             'slug': {'validators': [
-                UniqueValidator(queryset=Categories.objects.all()),
+                UniqueValidator(queryset=Category.objects.all()),
                 RegexValidator(r'^[-a-zA-Z0-9_]+$')
             ]}
         }
@@ -36,12 +36,12 @@ class GenresSerializer(serializers.ModelSerializer):
     slug = serializers.SlugField(max_length=50, required=True)
 
     class Meta:
-        model = Genres
+        model = Genre
         fields = ('name', 'slug')
         lookup_field = 'slug'
         extra_kwargs = {
             'slug': {'validators': [
-                UniqueValidator(queryset=Genres.objects.all()),
+                UniqueValidator(queryset=Genre.objects.all()),
                 RegexValidator(r'^[-a-zA-Z0-9_]+$')
             ]}
         }
@@ -52,19 +52,18 @@ class TitlesPostSerializer(serializers.ModelSerializer):
 
     category = serializers.SlugRelatedField(
         required=True,
-        queryset=Categories.objects.all(),
+        queryset=Category.objects.all(),
         slug_field='slug'
     )
     genre = serializers.SlugRelatedField(
         required=True,
-        queryset=Genres.objects.all(),
+        queryset=Genre.objects.all(),
         slug_field='slug',
-        many=True,
-        source='genres'
+        many=True
     )
 
     class Meta:
-        model = Titles
+        model = Title
         fields = ('id', 'name', 'year', 'description', 'genre', 'category')
 
 
@@ -74,24 +73,23 @@ class TitlesGetSerializer(serializers.ModelSerializer):
     category = CategoriesSerializer(read_only=True)
     genre = GenresSerializer(
         read_only=True,
-        many=True,
-        source='genres'
+        many=True
     )
     rating = serializers.IntegerField(read_only=True)
 
     def validate_year(self, value):
+        """Проверка чтобы дата произведения не была из будущего."""
         year = dt.date.today().year
         if year < value:
             raise serializers.ValidationError('Проверьте год произведения')
         return value
 
-    def get_rating(self, obj):
-        average_rating = obj.reviews.aggregate(Avg('score'))['score__avg']
-        return int(average_rating) if average_rating else None
 
     class Meta:
-        model = Titles
-        fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category')
+        model = Title
+        fields = (
+            'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
+        )
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -106,11 +104,13 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'text', 'author', 'score', 'pub_date')
 
     def validate_score(self, value):
+        """Валидация оценки в промежутке от 1 до 10."""
         if 0 > value > 10:
             raise serializers.ValidationError('Оценка от 1 до 10')
         return value
 
     def validate(self, data):
+        """Валидация полей title и author."""
         title = data.get('title')
         author = data.get('author')
 
@@ -185,7 +185,6 @@ class GetTokenSerializer(serializers.Serializer):
 
     def validate(self, data):
         """Проверяем, что передан username и confirmation_code."""
-
         username = self.initial_data.get('username', None)
         confirmation_code = self.initial_data.get('confirmation_code', None)
         if username is None:

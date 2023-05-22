@@ -1,3 +1,5 @@
+"""Модель приложения Reviews."""
+
 import random
 
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -11,14 +13,14 @@ from django.db import models
 
 CHARS_TO_SHOW = 15
 
-role_list = (
+ROLE_LIST = (
     ('admin', 'Админ'),
     ('user', 'Пользователь'),
     ('moderator', 'Модератор')
 )
 
 
-class Categories(models.Model):
+class Category(models.Model):
     """Модель категорий (типов) произведения."""
 
     name = models.CharField(max_length=256)
@@ -35,7 +37,7 @@ class Categories(models.Model):
         return self.name[:CHARS_TO_SHOW]
 
 
-class Genres(models.Model):
+class Genre(models.Model):
     """Модель жанров произведения."""
 
     name = models.CharField(max_length=256)
@@ -52,20 +54,20 @@ class Genres(models.Model):
         return self.name[:CHARS_TO_SHOW]
 
 
-class Titles(models.Model):
+class Title(models.Model):
     """Модель произведений."""
 
     name = models.CharField(max_length=256)
     year = models.IntegerField()
     description = models.TextField(max_length=500, blank=True, null=True)
     category = models.ForeignKey(
-        Categories,
+        Category,
         on_delete=models.SET_NULL,
         related_name='titles',
         blank=True,
         null=True,
     )
-    genres = models.ManyToManyField(Genres, related_name='titles', blank=True)
+    genre = models.ManyToManyField(Genre, related_name='titles', blank=True)
 
     def __str__(self):
         """Текстовое отображение произведений."""
@@ -126,7 +128,7 @@ class User(AbstractUser):
         blank=True,
     )
     role = models.CharField(
-        'Роль пользователя', choices=role_list, max_length=10, default='user'
+        'Роль пользователя', choices=ROLE_LIST, max_length=10, default='user'
     )
     confirmation_code = models.CharField(
         'Код подтверждения', max_length=9, blank=True
@@ -147,7 +149,7 @@ class Review(models.Model):
     """Модели для отзывов."""
 
     title = models.ForeignKey(
-        Titles, on_delete=models.CASCADE, related_name='reviews', null=True
+        Title, on_delete=models.CASCADE, related_name='reviews', null=True
     )
     text = models.TextField(verbose_name='Отзыв', null=False)
     author = models.ForeignKey(
