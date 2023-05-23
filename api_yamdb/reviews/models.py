@@ -1,15 +1,16 @@
 """Модель приложения Reviews."""
 
+import datetime as dt
 import random
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.core.mail import send_mail
-from django.core.validators import (
-    MaxValueValidator, MinValueValidator, RegexValidator,
-)
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
+from .validators import regex_validator
 
 CHARS_TO_SHOW = 15
 
@@ -24,13 +25,11 @@ class Category(models.Model):
     """Модель категорий (типов) произведения."""
 
     name = models.CharField(max_length=256)
-    slug = models.SlugField(unique=True, max_length=50)
-    validators = [
-        RegexValidator(
-            regex=r'^[-a-zA-Z0-9_]+$',
-            message='Используйте цифры, латинские буквы, дефис, подчеркивание.',
-        )
-    ]
+    slug = models.SlugField(
+        unique=True,
+        max_length=50,
+        validators=regex_validator
+    )
 
     def __str__(self):
         """Текстовое отображение категорий."""
@@ -41,13 +40,11 @@ class Genre(models.Model):
     """Модель жанров произведения."""
 
     name = models.CharField(max_length=256)
-    slug = models.SlugField(unique=True, max_length=50)
-    validators = [
-        RegexValidator(
-            regex=r'^[-a-zA-Z0-9_]+$',
-            message='Используйте цифры, латинские буквы, дефис, подчеркивание.',
-        )
-    ]
+    slug = models.SlugField(
+        unique=True,
+        max_length=50,
+        validators=regex_validator
+    )
 
     def __str__(self):
         """Текстовое отображение жанров."""
@@ -58,8 +55,10 @@ class Title(models.Model):
     """Модель произведений."""
 
     name = models.CharField(max_length=256)
-    year = models.IntegerField()
-    description = models.TextField(max_length=500, blank=True, null=True)
+    year = models.PositiveSmallIntegerField(
+        MaxValueValidator(dt.date.today().year)
+    )
+    description = models.TextField(max_length=500, blank=True)
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
@@ -140,7 +139,6 @@ class User(AbstractUser):
 
     def create_jwt_token(self):
         """Создает и возвращает jwt токен для пользователя"""
-
         refresh = RefreshToken.for_user(self)
         return str(refresh.access_token)
 

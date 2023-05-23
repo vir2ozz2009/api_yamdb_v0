@@ -61,24 +61,6 @@ class GenresViewSet(DestroyCreateListMixins):
     lookup_field = 'slug'
     pagination_class = GenresAndCategoriesPagination
 
-    def create(self, request, *args, **kwargs):
-        """Создание жанров с учетом того что поле slug уникальное."""
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        slug = serializer.validated_data['slug']
-
-        if Genre.objects.filter(slug=slug).exists():
-            return Response(
-                {'error': 'Жанр с таким slug уже существует.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
-
 
 class CategoriesViewSet(DestroyCreateListMixins):
     """Вьюсет модели Categories"""
@@ -90,24 +72,6 @@ class CategoriesViewSet(DestroyCreateListMixins):
     search_fields = ('name',)
     lookup_field = 'slug'
     pagination_class = GenresAndCategoriesPagination
-
-    def create(self, request, *args, **kwargs):
-        """Создание категорий с учетом того что поле slug уникальное."""
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        slug = serializer.validated_data['slug']
-
-        if Category.objects.filter(slug=slug).exists():
-            return Response(
-                {'error': 'Категория с таким slug уже существует.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED, headers=headers
-        )
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
