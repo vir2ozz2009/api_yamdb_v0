@@ -3,7 +3,6 @@
 import datetime as dt
 
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
 
 from django.core.validators import RegexValidator
 from django.shortcuts import get_object_or_404
@@ -14,37 +13,19 @@ from reviews.models import Category, Comment, Genre, Review, Title, User
 class CategoriesSerializer(serializers.ModelSerializer):
     """Сериалайзер для модели Categories."""
 
-    name = serializers.CharField(max_length=256, required=True)
-    slug = serializers.SlugField(max_length=50, required=True)
-
     class Meta:
         model = Category
         fields = ('name', 'slug')
         lookup_field = 'slug'
-        extra_kwargs = {
-            'slug': {'validators': [
-                UniqueValidator(queryset=Category.objects.all()),
-                RegexValidator(r'^[-a-zA-Z0-9_]+$')
-            ]}
-        }
 
 
 class GenresSerializer(serializers.ModelSerializer):
     """Сериалайзер для модели Genres."""
 
-    name = serializers.CharField(max_length=256, required=True)
-    slug = serializers.SlugField(max_length=50, required=True)
-
     class Meta:
         model = Genre
         fields = ('name', 'slug')
         lookup_field = 'slug'
-        extra_kwargs = {
-            'slug': {'validators': [
-                UniqueValidator(queryset=Genre.objects.all()),
-                RegexValidator(r'^[-a-zA-Z0-9_]+$')
-            ]}
-        }
 
 
 class TitlesPostSerializer(serializers.ModelSerializer):
@@ -77,18 +58,18 @@ class TitlesGetSerializer(serializers.ModelSerializer):
     )
     rating = serializers.IntegerField(read_only=True)
 
+    class Meta:
+        model = Title
+        fields = (
+            'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
+        )
+
     def validate_year(self, value):
         """Проверка чтобы дата произведения не была из будущего."""
         year = dt.date.today().year
         if year < value:
             raise serializers.ValidationError('Проверьте год произведения')
         return value
-
-    class Meta:
-        model = Title
-        fields = (
-            'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
-        )
 
 
 class ReviewSerializer(serializers.ModelSerializer):
