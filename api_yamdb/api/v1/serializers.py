@@ -77,19 +77,18 @@ class TitlesGetSerializer(serializers.ModelSerializer):
     )
     rating = serializers.IntegerField(read_only=True)
 
+    class Meta:
+        model = Title
+        fields = (
+            'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
+        )
+
     def validate_year(self, value):
         """Проверка чтобы дата произведения не была из будущего."""
         year = dt.date.today().year
         if year < value:
             raise serializers.ValidationError('Проверьте год произведения')
         return value
-
-
-    class Meta:
-        model = Title
-        fields = (
-            'id', 'name', 'year', 'rating', 'description', 'genre', 'category'
-        )
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -110,18 +109,15 @@ class ReviewSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
-        """Валидация полей title и author."""
-        title = data.get('title')
-        author = data.get('author')
-
-        if title and author:
-            existing_reviews = Review.objects.filter(
-                title=title, author=author
+        if self.context['request'].method != 'POST':
+            return data
+        title = self.context['view'].kwargs.get('title_id')
+        author = self.context['request'].user
+        if Review.objects.filter(
+                author=author, title=title).exists():
+            raise serializers.ValidationError(
+                'Отзыв на произведение уже написан.'
             )
-            if existing_reviews.exists():
-                raise serializers.ValidationError(
-                    'Отзыв на произведение уже написан'
-                )
         return data
 
 
