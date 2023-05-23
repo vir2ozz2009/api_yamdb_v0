@@ -140,7 +140,6 @@ class User(AbstractUser):
 
     def create_jwt_token(self):
         """Создает и возвращает jwt токен для пользователя"""
-
         refresh = RefreshToken.for_user(self)
         return str(refresh.access_token)
 
