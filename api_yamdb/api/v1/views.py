@@ -1,7 +1,7 @@
 """Вьюхи к API."""
 
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, permissions, serializers, status, viewsets
+from rest_framework import filters, permissions, status, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -16,9 +16,15 @@ from .mixins import DestroyCreateListMixins, RetrieveUpdateViewSet
 from .pagination import GenresAndCategoriesPagination
 from .permissions import AdminPermission, CustomPermission, OnlyAdminPermission
 from .serializers import (
-    CategoriesSerializer, CommentSerializer, GenresSerializer,
-    GetTokenSerializer, RegistrationSerializer, RetrieveUpdateUserSerializer,
-    ReviewSerializer, TitlesGetSerializer, TitlesPostSerializer,
+    CategoriesSerializer,
+    CommentSerializer,
+    GenresSerializer,
+    GetTokenSerializer,
+    RegistrationSerializer,
+    RetrieveUpdateUserSerializer,
+    ReviewSerializer,
+    TitlesGetSerializer,
+    TitlesPostSerializer,
     UserSerializer,
 )
 
@@ -26,7 +32,11 @@ from .serializers import (
 class TitlesViewSet(viewsets.ModelViewSet):
     """Вьюсет модели Titles."""
 
-    queryset = Title.objects.annotate(rating=Avg('reviews__score'))
+    queryset = (
+        Title.objects.annotate(rating=Avg('reviews__score'))
+        .select_related('category')
+        .prefetch_related('genre')
+    )
     permission_classes = (OnlyAdminPermission,)
     filter_backends = (filters.SearchFilter, DjangoFilterBackend)
     filterset_class = TitleFilter
@@ -80,12 +90,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         """Создание отзывов."""
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
         author = self.request.user
-
-        existing_review = title.reviews.filter(author=author).exists()
-        if existing_review:
-            raise serializers.ValidationError(
-                'Отзыв на произведение уже написан.'
-            )
         serializer.save(author=author, title=title)
 
 
@@ -183,6 +187,6 @@ class UserViewSet(viewsets.ModelViewSet):
         if request.method == 'PUT':
             return Response(
                 {'error': 'Метод PUT не поддерживается'},
-                status=status.HTTP_405_METHOD_NOT_ALLOWED
+                status=status.HTTP_405_METHOD_NOT_ALLOWED,
             )
         return super().update(request, *args, **kwargs)
