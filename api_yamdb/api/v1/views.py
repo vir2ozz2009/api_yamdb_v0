@@ -122,10 +122,9 @@ class RegistrationAPIView(APIView):
         if serializer.is_valid():
             username = serializer.validated_data.get('username')
             email = serializer.validated_data.get('email')
-            if (
-                User.objects.filter(username=username).exists()
-                and User.objects.filter(email=email).exists()
-            ):
+            username_search = User.objects.filter(username=username).exists()
+            email_search = User.objects.filter(email=email).exists()
+            if username_search and email_search:
                 return Response(
                     {
                         'error': 'Пользователь с таким username'
@@ -133,15 +132,12 @@ class RegistrationAPIView(APIView):
                     },
                     status=status.HTTP_200_OK,
                 )
-            if User.objects.filter(email=email).exists():
+            if email_search:
                 return Response(
                     {'error': 'Это email уже используется'},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            if (
-                User.objects.filter(username=username).exists()
-                and not User.objects.filter(email=email).exists()
-            ):
+            if username_search and not email_search:
                 return Response(
                     {'error': 'Неправильный email'},
                     status=status.HTTP_400_BAD_REQUEST,

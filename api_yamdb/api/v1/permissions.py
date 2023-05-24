@@ -3,7 +3,7 @@
 from rest_framework import permissions
 from rest_framework.permissions import BasePermission
 
-from reviews.models import Comment, Review, User
+from reviews.models import Comment, Review, ROLE_LIST, User
 
 
 class OnlyAdminPermission(BasePermission):
@@ -30,12 +30,13 @@ class CustomPermission(BasePermission):
             return True
         if obj.author == request.user or isinstance(obj, User):
             return True
-        if request.user.role == 'moderator' and isinstance(
+        if request.user.role == ROLE_LIST.moderator.value and isinstance(
             obj,
             (Review, Comment)
         ):
             return True
-        if request.user.role == 'admin' or request.user.is_superuser:
+        if (request.user.role == ROLE_LIST.admin.value
+                or request.user.is_superuser):
             return True
         return False
 
@@ -45,5 +46,5 @@ class AdminPermission(BasePermission):
 
     def has_permission(self, request, view):
         return ((request.user.is_authenticated
-                and request.user.role == 'admin')
+                and request.user.role == ROLE_LIST.admin.value)
                 or request.user.is_superuser)

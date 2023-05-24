@@ -1,6 +1,7 @@
 """Модель приложения Reviews."""
 
 import datetime as dt
+import enum
 import random
 
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -14,11 +15,11 @@ from .validators import regex_validator
 
 CHARS_TO_SHOW = 15
 
-ROLE_LIST = (
-    ('admin', 'Админ'),
-    ('user', 'Пользователь'),
-    ('moderator', 'Модератор')
-)
+
+class ROLE_LIST(enum.Enum):
+    admin = 'admin'
+    user = 'user'
+    moderator = 'moderator'
 
 
 class Category(models.Model):
@@ -116,6 +117,8 @@ class CustomUserManager(UserManager):
             raise ValueError('Superuser must have is_staff=True.')
         if extra_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must have is_superuser=True.')
+        if extra_fields.get('username') == 'me':
+            raise ValueError('Имя "me" недопускается!')
         return self.create_user(username, email, password, **extra_fields)
 
 
@@ -127,7 +130,10 @@ class User(AbstractUser):
         blank=True,
     )
     role = models.CharField(
-        'Роль пользователя', choices=ROLE_LIST, max_length=10, default='user'
+        'Роль пользователя',
+        choices=[(role.value, role.name) for role in ROLE_LIST],
+        max_length=10,
+        default='user'
     )
     confirmation_code = models.CharField(
         'Код подтверждения', max_length=9, blank=True
