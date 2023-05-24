@@ -8,6 +8,7 @@ from django.core.validators import RegexValidator
 from django.shortcuts import get_object_or_404
 
 from reviews.models import Category, Comment, Genre, Review, Title, User
+from reviews.validators import validate_username
 
 
 class CategoriesSerializer(serializers.ModelSerializer):
@@ -122,7 +123,10 @@ class RegistrationSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         required=True,
         max_length=150,
-        validators=[RegexValidator(r'^[\w.+-]+\Z', 'Enter a valid username.')],
+        validators=[
+            RegexValidator(r'^[\w.+-]+\Z', 'Enter a valid username.'),
+            validate_username
+        ],
     )
     email = serializers.EmailField(required=True, max_length=254)
 
@@ -141,12 +145,6 @@ class RegistrationSerializer(serializers.ModelSerializer):
             'last_name': {'write_only': True},
             'bio': {'write_only': True},
         }
-
-    def validate_username(self, value):
-        """Проверка что имя пользователя не равно me."""
-        if value == 'me':
-            raise serializers.ValidationError('Имя "me" недопускается!')
-        return value
 
     def create(self, validated_data):
         """Создаем нового пользователя с валидированными данными."""
