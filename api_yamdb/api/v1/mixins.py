@@ -6,8 +6,8 @@ from .permissions import OnlyAdminPermission
 
 
 class DestroyCreateListMixins(mixins.CreateModelMixin,
-                              mixins.ListModelMixin,
                               mixins.DestroyModelMixin,
+                              mixins.ListModelMixin,
                               viewsets.GenericViewSet):
     """Кастомный миксин для вьюсетов моделей Category и Genre."""
 
