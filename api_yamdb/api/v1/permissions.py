@@ -3,7 +3,7 @@
 from rest_framework import permissions
 from rest_framework.permissions import BasePermission
 
-from reviews.models import Comment, Review, ROLE_LIST, User
+from reviews.models import ROLE_LIST, Comment, Review, User
 
 
 class OnlyAdminPermission(BasePermission):

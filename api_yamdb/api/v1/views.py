@@ -16,15 +16,9 @@ from .mixins import DestroyCreateListMixins, RetrieveUpdateViewSet
 from .pagination import GenresAndCategoriesPagination
 from .permissions import AdminPermission, CustomPermission, OnlyAdminPermission
 from .serializers import (
-    CategoriesSerializer,
-    CommentSerializer,
-    GenresSerializer,
-    GetTokenSerializer,
-    RegistrationSerializer,
-    RetrieveUpdateUserSerializer,
-    ReviewSerializer,
-    TitlesGetSerializer,
-    TitlesPostSerializer,
+    CategoriesSerializer, CommentSerializer, GenresSerializer,
+    GetTokenSerializer, RegistrationSerializer, RetrieveUpdateUserSerializer,
+    ReviewSerializer, TitlesGetSerializer, TitlesPostSerializer,
     UserSerializer,
 )
 
