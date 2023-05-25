@@ -13,7 +13,7 @@ class OnlyAdminPermission(BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         return ((request.user.is_authenticated
-                and request.user.role == 'admin')
+                and request.user.role == ROLE_LIST.admin.value)
                 or request.user.is_superuser)
 
 

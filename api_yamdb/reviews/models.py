@@ -8,10 +8,14 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.core.mail import send_mail
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import (
+    MaxValueValidator,
+    MinValueValidator,
+    RegexValidator
+)
 from django.db import models
 
-from .validators import regex_validator
+from .validators import regex_validator, validate_username
 
 CHARS_TO_SHOW = 15
 
@@ -124,6 +128,14 @@ class CustomUserManager(UserManager):
 
 class User(AbstractUser):
     """Кастомная модель пользователя."""
+
+    username = models.CharField(
+        max_length=150,
+        verbose_name='Логин',
+        help_text='Укажите логин',
+        unique=True,
+        validators=[RegexValidator(regex=r'^[\w.@+-]+$'), validate_username]
+    )
 
     bio = models.TextField(
         'Биография',
