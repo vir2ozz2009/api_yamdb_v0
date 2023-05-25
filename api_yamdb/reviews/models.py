@@ -29,11 +29,12 @@ class ROLE_LIST(enum.Enum):
 class Category(models.Model):
     """Модель категорий (типов) произведения."""
 
-    name = models.CharField(max_length=256)
+    name = models.CharField(max_length=256, verbose_name='Название категории')
     slug = models.SlugField(
         unique=True,
         max_length=50,
-        validators=regex_validator
+        validators=regex_validator,
+        verbose_name='Slug категории'
     )
 
     def __str__(self):
@@ -44,11 +45,12 @@ class Category(models.Model):
 class Genre(models.Model):
     """Модель жанров произведения."""
 
-    name = models.CharField(max_length=256)
+    name = models.CharField(max_length=256, verbose_name='Название жанра')
     slug = models.SlugField(
         unique=True,
         max_length=50,
-        validators=regex_validator
+        validators=regex_validator,
+        verbose_name='Slug жанра'
     )
 
     def __str__(self):
@@ -59,19 +61,29 @@ class Genre(models.Model):
 class Title(models.Model):
     """Модель произведений."""
 
-    name = models.CharField(max_length=256)
+    name = models.CharField(max_length=256, verbose_name='Название тайтла')
     year = models.PositiveSmallIntegerField(
         MaxValueValidator(dt.date.today().year)
     )
-    description = models.TextField(max_length=500, blank=True)
+    description = models.TextField(
+        max_length=500,
+        blank=True,
+        verbose_name='Описание'
+    )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
         related_name='titles',
         blank=True,
         null=True,
+        verbose_name='Категория'
     )
-    genre = models.ManyToManyField(Genre, related_name='titles', blank=True)
+    genre = models.ManyToManyField(
+        Genre,
+        related_name='titles',
+        blank=True,
+        verbose_name='Жанр'
+    )
 
     def __str__(self):
         """Текстовое отображение произведений."""
